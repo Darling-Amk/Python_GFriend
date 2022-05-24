@@ -4,3 +4,4 @@ Graf Friend - проект для построения графов друзей
 #FOP - For One Person
 Построить граф друзей и связей между ними для одного человека
 
+![FOP Sample](https://github.com/Darling-Amk/Python_GFriend/blob/main/samples/FOP_sample.jpg?raw=true)
