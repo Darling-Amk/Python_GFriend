@@ -1,9 +1,12 @@
+from art import  tprint
+import time
 import networkx as nx
 from pyvis.network import Network
-from person import Person,Avatar
+from person import Person
 import requests
 
-TOKEN = "Insert your access_token"
+from token_ import TOKEN
+
 MAIN_FRIEND = set()
 ALL_FRIEND = set()
 
@@ -13,8 +16,7 @@ class VkPerson(Person):
         u_id = info['id']
         u_name = f"{info['first_name']} {info['last_name']}"
         u_c = True if 'deactivated' in info else info['is_closed']
-        ava = Avatar("nophoto.png" if (u_c or info['photo_400_orig']=='https://vk.com/images/camera_400.png') else f"{u_id}.jpg")
-
+        ava = info['photo_400_orig']
         super().__init__(name = u_name,avatar=ava,id = u_id)
         self._friend_list = set() if u_c else set(get_friends_id(self.id))
 
@@ -40,27 +42,24 @@ def get_info(link):
     )
     info = requests.get('https://api.vk.com/method/users.get', params=user_q).json()
     info = info['response'][0]
-    p = requests.get(info['photo_400_orig'])
-    out = open(f"images/{info['id']}.jpg", "wb")
-    out.write(p.content)
-    out.close()
     return info
 
 def createSubVkNode(graph,person):
     ALL_FRIEND.add(person.id)
-    graph.add_node(person.id,label=person.name,shape='image',  image = person.get_path())
+    graph.add_node(person.id,label=person.name,shape='image',  image = person.ava)
     for friend_id in person._friend_list:
         if friend_id in ALL_FRIEND:
             graph.add_edge(person.id, friend_id)
 
 def createMainVkNode(graph,person):
-    graph.add_node(person.id, label=person.name, shape='image', image=person.get_path())
+    graph.add_node(person.id, label=person.name, shape='image', image=person.ava)
     for friend_id in person._friend_list:
         print(f"[+]  {friend_id}")
         friend_id = int(friend_id)
         MAIN_FRIEND.add(friend_id)
         createSubVkNode(graph,VkPerson(link=f"https://vk.com/id{friend_id}"))
         graph.add_edge(person.id, friend_id)
+
 
 def main():
     graph = nx.Graph()
@@ -72,4 +71,7 @@ def main():
     net.show("GFriend_FOP.html")
 
 if __name__ == '__main__':
+    start_time = time.time()
+    tprint('GFriend_FOP',chr_ignore=True)
     main()
+    print("--- %s seconds ---" % (time.time() - start_time))
